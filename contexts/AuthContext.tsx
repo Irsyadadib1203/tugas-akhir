@@ -1,71 +1,136 @@
 "use client";
-import React, { createContext, useContext, useState } from "react";
 
-interface User {
-  id: string;
-  email: string;
-  name: string;
-}
+import React, { createContext, useContext, useEffect, useState } from "react";
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
+  signOut,
+  updateProfile,
+  User as FirebaseUser
+} from "firebase/auth";
+import { auth } from "@/lib/firebase";
+import { FirebaseError } from "firebase/app";
 
 interface AuthContextType {
-  user: User | null;
+  user: FirebaseUser | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
-  register: (email: string, password: string, name: string) => Promise<boolean>;
-  logout: () => void;
+  login: (
+    email: string,
+    password: string
+  ) => Promise<{ success: boolean; message?: string }>;
+  register: (
+  email: string,
+  password: string,
+  name: string
+) => Promise<{ success: boolean; message?: string }>;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(() => {
-    if (typeof window === "undefined") return null;
-    const storedUser = localStorage.getItem("waterMonitorUser");
-    return storedUser ? JSON.parse(storedUser) : null;
-  });
+  const [user, setUser] = useState<FirebaseUser | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    if (email && password.length >= 6) {
-      const mockUser = {
-        id: "1",
-        email,
-        name: email.split("@")[0],
-      };
-      setUser(mockUser);
-      localStorage.setItem("waterMonitorUser", JSON.stringify(mockUser));
-      return true;
-    }
-    return false;
-  };
+  // 🔥 Listen ke perubahan login Firebase
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser);
+      setLoading(false);
+    });
 
-  const register = async (
+    return () => unsubscribe();
+  }, []);
+
+  // ✅ Login Firebase
+  const login = async (
     email: string,
-    password: string,
-    name: string
-  ): Promise<boolean> => {
-    if (email && password.length >= 6 && name) {
-      const mockUser = {
-        id: "1",
-        email,
-        name,
-      };
-      setUser(mockUser);
-      localStorage.setItem("waterMonitorUser", JSON.stringify(mockUser));
-      return true;
+    password: string
+  ): Promise<{ success: boolean; message?: string }> => {
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      return { success: true };
+    } catch (error: unknown) {
+      let message = "Terjadi kesalahan saat login.";
+
+      if (error instanceof FirebaseError) {
+        switch (error.code) {
+          case "auth/user-not-found":
+            message = "Email tidak terdaftar.";
+            break;
+          case "auth/wrong-password":
+            message = "Password salah.";
+            break;
+          case "auth/invalid-email":
+            message = "Format email tidak valid.";
+            break;
+          case "auth/invalid-credential":
+            message = "Email atau password salah.";
+            break;
+        }
+      }
+
+      return { success: false, message };
     }
-    return false;
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem("waterMonitorUser");
+  // ✅ Register Firebase
+  const register = async (
+  email: string,
+  password: string,
+  name: string
+): Promise<{ success: boolean; message?: string }> => {
+  try {
+    const userCredential = await createUserWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+
+    if (userCredential.user) {
+      await updateProfile(userCredential.user, {
+        displayName: name,
+      });
+    }
+
+    return { success: true };
+  } catch (error: unknown) {
+    let message = "Terjadi kesalahan saat registrasi.";
+
+    if (error instanceof FirebaseError) {
+      switch (error.code) {
+        case "auth/email-already-in-use":
+          message = "Email sudah digunakan.";
+          break;
+        case "auth/weak-password":
+          message = "Password terlalu lemah.";
+          break;
+        case "auth/invalid-email":
+          message = "Format email tidak valid.";
+          break;
+      }
+    }
+
+    return { success: false, message };
+  }
+};
+
+  const logout = async () => {
+    await signOut(auth);
   };
 
   return (
     <AuthContext.Provider
-      value={{ user, isAuthenticated: !!user, login, register, logout }}
+      value={{
+        user,
+        isAuthenticated: !!user,
+        login,
+        register,
+        logout
+      }}
     >
-      {children}
+      {!loading && children}
     </AuthContext.Provider>
   );
 };

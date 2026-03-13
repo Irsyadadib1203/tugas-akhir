@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Droplets, Mail, Lock, User, ArrowRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useEffect } from 'react';
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -19,36 +20,50 @@ export default function Auth() {
    const router = useRouter();
   const { toast } = useToast();
 
-  if (isAuthenticated) {
-    router.replace("/dashboard");
-    return null;
-  }
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace("/dashboard");
+    }
+  }, [isAuthenticated, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      const success = isLogin
+      const result = isLogin
         ? await login(email, password)
         : await register(email, password, name);
+        
 
-      if (success) {
-        toast({
-          title: isLogin ? "Login Berhasil" : "Registrasi Berhasil",
-          description: "Selamat datang di AquaMonitor!",
-        });
-
-        router.push("/dashboard");
-      } else {
-        toast({
-          title: "Error",
-          description: isLogin
-            ? "Email atau password salah"
-            : "Gagal melakukan registrasi",
-          variant: "destructive",
-        });
-      }
+      if (isLogin) {
+          if (result.success) {
+            toast({
+              title: "Login Berhasil",
+              description: "Selamat datang di AquaMonitor!",
+            });
+          } else {
+            toast({
+              title: "Login Gagal",
+              description: result.message,
+              variant: "destructive",
+            });
+          }
+        } else {
+          if (result) {
+            toast({
+              title: "Registrasi Berhasil",
+              description: "Akun berhasil dibuat!",
+            });
+            router.push("/dashboard");
+          } else {
+            toast({
+              title: "Registrasi Gagal",
+              description: "Terjadi kesalahan saat registrasi.",
+              variant: "destructive",
+            });
+          }
+        }
     } catch {
       toast({
         title: "Error",
@@ -73,7 +88,7 @@ export default function Auth() {
             </div>
             <div>
               <h1 className="font-display text-3xl font-bold">AquaMonitor</h1>
-              <p className="text-sidebar-foreground/70">Water Quality System</p>
+              <p className="text-sidebar-foreground/70">Sistem Monitoring dan Controlling Kolam Ikan Lele</p>
             </div>
           </div>
 
