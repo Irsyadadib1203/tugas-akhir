@@ -1,22 +1,32 @@
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from 'recharts';
-import { SensorReading } from '@/data/mockSensorData';
 
+export interface SensorReading {
+  timestamp: string | Date;
+  ph: number;
+  suhu: number;
+  ntu: number;
+}
 interface SensorChartProps {
   title: string;
   data: SensorReading[];
-  dataKey: 'ph' | 'temperature' | 'turbidity';
+  dataKey: 'ph' | 'suhu' | 'ntu';
   color: string;
   unit: string;
 }
 
-const formatHour = (timestamp: Date) => {
-  return new Date(timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+const formatHour = (timestamp: string | Date) => {
+  if (typeof timestamp === 'string') return timestamp;
+
+  return new Date(timestamp).toLocaleTimeString('id-ID', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 };
 
 export const SensorChart = ({ title, data, dataKey, color, unit }: SensorChartProps) => {
   const chartData = data.map((reading) => ({
     time: formatHour(reading.timestamp),
-    value: reading[dataKey],
+    value: reading[dataKey] ?? 0,
   }));
 
   return (
@@ -47,7 +57,7 @@ export const SensorChart = ({ title, data, dataKey, color, unit }: SensorChartPr
                 boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
               }}
               labelStyle={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}
-              formatter={(value: number) => [`${value.toFixed(2)} ${unit}`, title]}
+              formatter={(value: number | undefined) => [`${(value ?? 0).toFixed(2)} ${unit}`,title]}
             />
             <Line
               type="monotone"

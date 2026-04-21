@@ -7,6 +7,8 @@ import {
   onAuthStateChanged,
   signOut,
   updateProfile,
+  sendPasswordResetEmail,
+  fetchSignInMethodsForEmail,
   User as FirebaseUser
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
@@ -25,6 +27,9 @@ interface AuthContextType {
   name: string
 ) => Promise<{ success: boolean; message?: string }>;
   logout: () => Promise<void>;
+  forgotPassword: (
+    email: string
+  ) => Promise<{ success: boolean; message?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -115,6 +120,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { success: false, message };
   }
 };
+  // ✅ Forgot Password Firebase
+  const forgotPassword = async (
+    email: string
+  ): Promise<{ success: boolean; message?: string }> => {
+    try {
+      // Cek apakah email sudah terdaftar
+    const signInMethods = await fetchSignInMethodsForEmail(auth, email);
+
+    if (signInMethods.length === 0) {
+      return {
+        success: false,
+        message: "Email tidak terdaftar. Periksa kembali email Anda.",
+      };
+    }
+
+    await sendPasswordResetEmail(auth, email);
+    return {
+      success: true,
+      message: "Link reset password telah dikirim ke email Anda.",
+    };
+  } catch (error: unknown) {
+    let message = "Terjadi kesalahan saat mengirim email reset password.";
+
+      if (error instanceof FirebaseError) {
+        switch (error.code) {
+          case "auth/user-not-found":
+            message = "Email tidak terdaftar.";
+            break;
+          case "auth/invalid-email":
+            message = "Format email tidak valid.";
+            break;
+          case "auth/too-many-requests":
+            message = "Terlalu banyak permintaan. Coba lagi nanti.";
+            break;
+        }
+      }
+
+      return { success: false, message };
+    }
+  };
 
   const logout = async () => {
     await signOut(auth);
@@ -127,7 +172,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isAuthenticated: !!user,
         login,
         register,
-        logout
+        logout,
+        forgotPassword
       }}
     >
       {!loading && children}

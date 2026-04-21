@@ -12,12 +12,13 @@ import {
 
 import { SensorCard } from '@/components/dashboard/SensorCard';
 import { SensorChart } from '@/components/dashboard/SensorChart';
-import { getTodayReadings, SensorReading } from '@/data/mockSensorData';
+import {  SensorReading } from '@/data/mockSensorData';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
 import { ref, onValue } from 'firebase/database';
 import { db } from '@/lib/firebase';
+
 
 /* =============================
    Firebase data interface
@@ -27,6 +28,12 @@ interface FirebaseSensorData {
   suhu: number;
   ntu: number;
   jarak_air_cm: number;
+}
+interface LogItem {
+  ph: number;
+  suhu: number;
+  turbidity: number;
+  jarak_air_cm?: number;
 }
 
 /* =============================
@@ -67,41 +74,91 @@ const getSensorStatus = (
 
 export default function Dashboard() {
 
-  const [todayData] = useState<SensorReading[]>(getTodayReadings());
+  const [todayData, setTodayData] = useState<SensorReading[]>([]);
   const [current, setCurrent] = useState<FirebaseSensorData | null>(null);
 
   const [waterFilling, setWaterFilling] = useState(false);
   const [waterDraining, setWaterDraining] = useState(false);
+  
+  
+
 
   /* =============================
      Firebase realtime listener
   ============================= */
   useEffect(() => {
-  const rootRef = ref(db, '/');
-
-  const unsubscribe = onValue(rootRef, (snapshot) => {
-    if (!snapshot.exists()) return;
-
-    const data = snapshot.val();
 
     // SENSOR (dari kolam)
-    setCurrent({
-      ph: data.kolam?.ph ?? 0,
-      suhu: data.kolam?.suhu ?? 0,
-      ntu: data.kolam?.ntu ?? 0,
-      jarak_air_cm: data.kolam?.jarak_air_cm ?? -1,
+    const kolamRef = ref(db, '/kolam');
+    const unsubKolam = onValue(kolamRef, (snap) => {
+      const data = snap.val();
+      if (!data) return;
+
+      setCurrent({
+        ph: data.ph ?? 0,
+        suhu: data.suhu ?? 0,
+        ntu: data.ntu ?? 0,
+        jarak_air_cm: data.jarak_air_cm ?? -1,
+      });
+     
     });
 
     // KONTROL (root level)
-    setWaterFilling(!!data.kontrol?.inlet);
-    setWaterDraining(!!data.kontrol?.outlet);
+    const kontrolRef = ref(db, '/kontrol');
+    const unsubKontrol = onValue(kontrolRef, (snap) => {
+      const data = snap.val();
+      setWaterFilling(!!data?.inlet);
+      setWaterDraining(!!data?.outlet);
+    });
 
-    // DEBUG (boleh dihapus)
-    console.log('OUTLET:', data.kontrol?.outlet);
+    // =====================
+    // 📊 AMBIL LOGS HARI INI
+    // =====================
+    const today = new Date().toLocaleDateString("en-CA", {timeZone: "Asia/Jakarta"});
+    const logsRef = ref(db, `/logs/${today}`);
+    const unsubLogs = onValue(logsRef, (snapshot) => {
+    if (!snapshot.exists()) {
+      setTodayData([]);
+      return;
+    }
+
+    const logs = snapshot.val();
+    const readings: SensorReading[] = [];
+
+        Object.entries(logs).forEach(([hour, hourData]) => {
+      Object.entries(hourData as Record<string, LogItem>).forEach(
+        ([minute, item]) => {
+          readings.push({
+            timestamp: new Date(`${today}T${hour}:${minute}:00+07:00`),
+            ph: item.ph,
+            suhu: item.suhu,
+            ntu: item.turbidity,
+            jarak_air_cm: item.jarak_air_cm ?? -1,
+          });
+        }
+      );
+    });
+    console.log("READINGS:", readings);
+    const MAX_POINTS = 100;
+
+    readings.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+
+    const finalData =
+      readings.length > MAX_POINTS
+        ? readings.slice(-MAX_POINTS)
+        : readings;
+
+    setTodayData(finalData);
   });
 
-  return () => unsubscribe();
+  return () => {
+    unsubKolam();
+    unsubKontrol();
+    unsubLogs();
+  };
 }, []);
+
+
 
 
   if (!current) {
@@ -211,9 +268,9 @@ export default function Dashboard() {
       <div>
         <h2 className="font-display text-xl font-semibold mb-4">Grafik Hari Ini</h2>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* <SensorChart title="pH" data={todayData} dataKey="ph" unit="pH" /> */}
-          {/* <SensorChart title="Suhu" data={todayData} dataKey="suhu" unit="°C" />
-          <SensorChart title="Kekeruhan" data={todayData} dataKey="ntu" unit="NTU" /> */}
+          <SensorChart title="pH" data={todayData} dataKey="ph" unit="pH" color="#3b82f6" />
+          <SensorChart title="Suhu" data={todayData} dataKey="suhu" unit="°C" color="#ef4444" />
+          <SensorChart title="Kekeruhan" data={todayData} dataKey="ntu" unit="NTU" color="#10b981" />
         </div>
       </div>
     </div>

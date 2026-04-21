@@ -1,8 +1,10 @@
 'use client'; 
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { historicalData, formatDateIndonesian } from '@/data/mockSensorData';
+// import { historicalData, formatDateIndonesian } from '@/data/mockSensorData';
+import { collection, getDocs } from 'firebase/firestore';
+import { firestore } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -15,15 +17,54 @@ import {
 import { ChevronLeft, ChevronRight, Eye } from 'lucide-react';
 
 const ITEMS_PER_PAGE = 10;
+const formatDateIndonesian = (dateString: string) => {
+  const date = new Date(dateString);
+
+  const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+  const months = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+  ];
+
+  return {
+    day: days[date.getDay()],
+    date: date.getDate(),
+    month: months[date.getMonth()],
+    year: date.getFullYear()
+  };
+};
 
 export default function History() {
   const [currentPage, setCurrentPage] = useState(1);
   const router = useRouter();
+  const [historicalData, setHistoricalData] = useState<{ date: string }[]>([]);
 
-  const totalPages = Math.ceil(historicalData.length / ITEMS_PER_PAGE);
+  const totalPages = Math.max(1, Math.ceil(historicalData.length / ITEMS_PER_PAGE));
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
   const currentData = historicalData.slice(startIndex, endIndex);
+  useEffect(() => {
+  const fetchHistory = async () => {
+    try {
+      
+      const snapshot = await getDocs(collection(firestore, 'history'));
+
+      const data = snapshot.docs.map(doc => ({
+        date: doc.id // karena doc.id = tanggal
+      }));
+      console.log(snapshot.docs);
+
+      // urutkan terbaru dulu
+      data.sort((a, b) => b.date.localeCompare(a.date));
+
+      setHistoricalData(data);
+    } catch (err) {
+      console.error('Error fetch history:', err);
+    }
+  };
+
+  fetchHistory();
+}, []);
 
   const handleViewDetail = (date: string) => {
     router.push(`/history/${date}`);
@@ -49,7 +90,14 @@ export default function History() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {currentData.map((data, index) => {
+            {historicalData.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={4} className="text-center py-10 text-muted-foreground">
+                  Belum ada data history
+                </TableCell>
+              </TableRow>
+            ) : (
+            currentData.map((data, index) => {
               const formattedDate = formatDateIndonesian(data.date);
               const rowNumber = startIndex + index + 1;
               
@@ -71,11 +119,12 @@ export default function History() {
                   </TableCell>
                 </TableRow>
               );
-            })}
+            }))}
           </TableBody>
         </Table>
 
         {/* Pagination */}
+        {historicalData.length > 0 && (
         <div className="flex items-center justify-between px-6 py-4 border-t border-border">
           <p className="text-sm text-muted-foreground">
             Menampilkan {startIndex + 1} - {Math.min(endIndex, historicalData.length)} dari {historicalData.length} data
@@ -116,7 +165,7 @@ export default function History() {
               <ChevronRight className="w-4 h-4" />
             </Button>
           </div>
-        </div>
+        </div>)}
       </div>
     </div>
   );

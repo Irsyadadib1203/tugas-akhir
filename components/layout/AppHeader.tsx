@@ -12,11 +12,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useEffect, useState } from "react";
-import { ref, onChildAdded } from "firebase/database";
+import { ref, onChildAdded, update } from "firebase/database";
 import { db } from "@/lib/firebase";
 
 interface Notification {
-  id: number;
+  id: string;
   title: string;
   message: string;
   time: string;
@@ -33,24 +33,65 @@ export const AppHeader = () => {
   const { user, logout } = useAuth();
   const navigate = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const markAllAsRead = async () => {
+  try {
+    const updates: { [key: string]: boolean } = {};
+
+    notifications.forEach(n => {
+      updates[`notifications/${n.id}/read`] = true;
+    });
+
+    await update(ref(db), updates);
+
+    setNotifications(prev =>
+      prev.map(n => ({ ...n, read: true }))
+    );
+  } catch (err) {
+    console.error(err);
+  }
+};
+  const markAsRead = async (id: string) => {
+    try {
+      await update(ref(db, `notifications/${id}`), {
+        read: true,
+      });
+
+      setNotifications(prev =>
+        prev.map(n => n.id === id ? { ...n, read: true } : n)
+      );
+    } catch (error) {
+      console.error(error);
+    }
+  };
   
   const unreadCount = notifications.filter(n => !n.read).length;
 
   useEffect(() => {
   const notifRef = ref(db, "notifications");
+  const getTimeAgo = (date: number) => {
+  const diff = Date.now() - date;
+  const minutes = Math.floor(diff / 60000);
+
+  if (minutes < 1) return "Baru saja";
+  if (minutes < 60) return `${minutes} menit lalu`;
+
+  const hours = Math.floor(minutes / 60);
+  return `${hours} jam lalu`;
+};
 
   const unsubscribe = onChildAdded(notifRef, (snapshot) => {
     const data = snapshot.val();
 
     const newNotification: Notification = {
-      id: Date.now(),
+      id: snapshot.key as string,
       title: data.title,
       message: data.message,
-      time: "Baru saja",
-      read: false,
+      time: getTimeAgo(data.timestamp),
+      read: data.read ?? false,
     };
 
-    setNotifications((prev) => [newNotification, ...prev]);
+
+    setNotifications((prev) => [newNotification, ...prev].slice(0, 7)); // Simpan hanya 10 notifikasi terbaru
   });
 
   return () => unsubscribe();
@@ -95,9 +136,24 @@ export const AppHeader = () => {
           <DropdownMenuContent align="end" className="w-80">
             <div className="p-3 border-b border-border">
               <h3 className="font-semibold">Notifikasi</h3>
+              <button
+                onClick={markAllAsRead}
+                className="text-xs text-primary"
+              >
+                Tandai semua
+              </button>
             </div>
-            {notifications.map((notification) => (
-              <DropdownMenuItem key={notification.id} className="p-3 cursor-pointer">
+            {notifications.length === 0 ? (
+              <div className="p-4 text-center text-sm text-muted-foreground">
+                Tidak ada notifikasi
+              </div>
+            ) : (
+            notifications.map((notification) => (
+              <DropdownMenuItem 
+                key={notification.id} 
+                onClick={() => markAsRead(notification.id)} 
+                className="p-3 cursor-pointer">
+                <div className={`p-3 rounded-lg ${!notification.read ? 'bg-muted/50' : ''}`}></div>
                 <div className="flex gap-3">
                   <div className={`w-2 h-2 rounded-full mt-2 ${notification.read ? 'bg-muted' : 'bg-primary'}`} />
                   <div>
@@ -107,7 +163,7 @@ export const AppHeader = () => {
                   </div>
                 </div>
               </DropdownMenuItem>
-            ))}
+            )))}
           </DropdownMenuContent>
         </DropdownMenu>
 
@@ -118,7 +174,7 @@ export const AppHeader = () => {
               <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                 <User className="w-4 h-4 text-primary" />
               </div>
-              <span className="font-medium">{user?.displayName || 'User'}</span>
+              <span className="font-medium">{user?.displayName || user?.email?.split('@')[0] || 'User'}</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
