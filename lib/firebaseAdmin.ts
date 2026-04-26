@@ -10,5 +10,6 @@ if (!admin.apps.length) {
     databaseURL: process.env.FIREBASE_DATABASE_URL,
   });
 }
+console.log("PROJECT_ID:", process.env.FIREBASE_PROJECT_ID);
 
 export default admin;
