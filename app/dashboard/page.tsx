@@ -12,10 +12,8 @@ import {
 
 import { SensorCard } from '@/components/dashboard/SensorCard';
 import { SensorChart } from '@/components/dashboard/SensorChart';
-import {  SensorReading } from '@/data/mockSensorData';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-
 import { ref, onValue } from 'firebase/database';
 import { db } from '@/lib/firebase';
 
@@ -34,6 +32,14 @@ interface LogItem {
   suhu: number;
   turbidity: number;
   jarak_air_cm?: number;
+}
+
+export interface SensorReading {
+  timestamp: Date;
+  ph: number;
+  suhu: number;            // suhu air (°C)
+  ntu: number;             // kekeruhan (NTU)
+  jarak_air_cm: number;    // ketinggian air (cm), -1 = error sensor
 }
 
 /* =============================
@@ -80,8 +86,17 @@ export default function Dashboard() {
   const [waterFilling, setWaterFilling] = useState(false);
   const [waterDraining, setWaterDraining] = useState(false);
   
-  
+  const [lastSeen, setLastSeen] = useState<number>(0);
+  const [isOnline, setIsOnline] = useState(false);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (lastSeen === 0) { setIsOnline(false); return; }
+      const now = Math.floor(Date.now() / 1000);
+      setIsOnline((now - lastSeen) < 10);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [lastSeen]);
 
   /* =============================
      Firebase realtime listener
@@ -100,7 +115,7 @@ export default function Dashboard() {
         ntu: data.ntu ?? 0,
         jarak_air_cm: data.jarak_air_cm ?? -1,
       });
-     
+      if (data.last_seen) setLastSeen(data.last_seen); 
     });
 
     // KONTROL (root level)
@@ -164,6 +179,9 @@ export default function Dashboard() {
   if (!current) {
     return <p className="text-muted-foreground">Menghubungkan ke Firebase...</p>;
   }
+  // Taruh setelah if (!current) return ...
+  const displayFilling  = isOnline ? waterFilling  : false;
+  const displayDraining = isOnline ? waterDraining : false;
 
   /* =============================
      Sensor cards config
@@ -207,6 +225,16 @@ export default function Dashboard() {
     <div className="space-y-6">
 
       {/* Header */}
+      {!isOnline && current && (
+        <div className="mt-3 flex items-center gap-2 px-4 py-2 
+                        bg-destructive/10 border border-destructive/30 
+                        rounded-lg w-fit">
+          <span className="w-2 h-2 rounded-full bg-destructive" />
+          <p className="text-sm text-destructive font-medium">
+            Perangkat offline — menampilkan data terakhir
+          </p>
+        </div>
+      )}
       <div>
         <h1 className="font-display text-2xl font-bold">Dashboard</h1>
         <p className="text-muted-foreground">
@@ -229,16 +257,16 @@ export default function Dashboard() {
             <div className="flex gap-4 items-center">
               <ArrowUpCircle className={cn(
                 "w-10 h-10",
-                waterFilling ? "text-success" : "text-muted-foreground"
+                displayFilling ? "text-success" : "text-muted-foreground"
               )} />
               <div>
                 <p className="text-sm text-muted-foreground">Pengisian Air</p>
-                <p className="font-bold">{waterFilling ? 'Aktif' : 'Tidak Aktif'}</p>
+                <p className="font-bold">{displayFilling ? 'Aktif' : 'Tidak Aktif'}</p>
               </div>
             </div>
             <span className={cn(
               "w-3 h-3 rounded-full",
-              waterFilling ? "bg-success animate-pulse" : "bg-muted"
+              displayFilling ? "bg-success animate-pulse" : "bg-muted"
             )} />
           </CardContent>
         </Card>
@@ -249,16 +277,16 @@ export default function Dashboard() {
             <div className="flex gap-4 items-center">
               <ArrowDownCircle className={cn(
                 "w-10 h-10",
-                waterDraining ? "text-warning" : "text-muted-foreground"
+                displayDraining ? "text-warning" : "text-muted-foreground"
               )} />
               <div>
                 <p className="text-sm text-muted-foreground">Pembuangan Air</p>
-                <p className="font-bold">{waterDraining ? 'Aktif' : 'Tidak Aktif'}</p>
+                <p className="font-bold">{displayDraining ? 'Aktif' : 'Tidak Aktif'}</p>
               </div>
             </div>
             <span className={cn(
               "w-3 h-3 rounded-full",
-              waterDraining ? "bg-warning animate-pulse" : "bg-muted"
+              displayDraining ? "bg-warning animate-pulse" : "bg-muted"
             )} />
           </CardContent>
         </Card>
