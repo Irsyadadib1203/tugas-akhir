@@ -64,8 +64,8 @@ const getSensorStatus = (
       return 'danger';
 
     case 'ntu':
-      if (value <= 1000) return 'normal';
-      if (value <= 2000) return 'warning';
+      if (value <= 400) return 'normal';
+      if (value <= 600) return 'warning';
       return 'danger';
 
     case 'level':

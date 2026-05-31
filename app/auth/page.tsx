@@ -5,14 +5,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Droplets, Mail, Lock, User, ArrowRight, X, KeyRound } from 'lucide-react';
+import { Droplets, Mail, Lock, ArrowRight, X, KeyRound } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function Auth() {
   const [isLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
+  const [name] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   // State untuk modal forgot password
@@ -32,6 +32,31 @@ export default function Auth() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+     if (!email) {
+    toast({
+      title: "Email wajib diisi",
+      variant: "destructive",
+    });
+    return;
+  }
+
+  if (!password) {
+    toast({
+      title: "Password wajib diisi",
+      variant: "destructive",
+    });
+    return;
+  }
+
+  if (password.length < 6) {
+    toast({
+      title: "Password minimal 6 karakter",
+      variant: "destructive",
+    });
+    return;
+  }
+
     setIsLoading(true);
 
     try {
@@ -176,24 +201,7 @@ export default function Auth() {
               : 'Daftar untuk mulai monitoring kualitas air'}
           </p>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {!isLogin && (
-              <div className="space-y-2">
-                <Label htmlFor="name">Nama Lengkap</Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <Input
-                    id="name"
-                    type="text"
-                    placeholder="Masukkan nama lengkap"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="pl-10 h-12"
-                    required={!isLogin}
-                  />
-                </div>
-              </div>
-            )}
+          <form onSubmit={handleSubmit} className="space-y-5"  noValidate>
 
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
