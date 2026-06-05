@@ -30,21 +30,21 @@ export const SensorChart = ({ title, data, dataKey, color, unit }: SensorChartPr
   }));
 
   return (
-    <div className="bg-card rounded-2xl p-6 sensor-card-shadow border border-border/50 animate-fade-in">
-      <h3 className="font-display font-semibold text-lg text-foreground mb-6">{title}</h3>
+   <div className="bg-card rounded-2xl p-4 sm:p-6 sensor-card-shadow border border-border/50 animate-fade-in">
+    <h3 className="font-display font-semibold text-base sm:text-lg text-foreground mb-3 sm:mb-6">{title}</h3>
       
-      <div className="h-64">
+      <div className="h-48 sm:h-64">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+          <LineChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis 
               dataKey="time" 
-              tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+              tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
               tickLine={false}
               axisLine={{ stroke: 'hsl(var(--border))' }}
             />
             <YAxis 
-              tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+              tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
               tickLine={false}
               axisLine={{ stroke: 'hsl(var(--border))' }}
               tickFormatter={(value) => value.toFixed(1)}

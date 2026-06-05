@@ -35,11 +35,12 @@ export default function DashboardLayout({
       <div
         className={cn(
           "flex flex-col min-h-screen transition-all duration-300",
-          sidebarCollapsed ? "ml-20" : "ml-64"
+          "ml-0",
+          sidebarCollapsed ? "md:ml-20" : "md:ml-64"
         )}
       >
         <AppHeader />
-        <main className="flex-1 p-6 overflow-auto">
+        <main className="flex-1 p-4 sm:p-6 overflow-auto pb-20 md:pb-6">
           {children}
         </main>
       </div>

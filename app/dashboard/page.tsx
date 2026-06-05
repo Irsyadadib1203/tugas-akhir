@@ -226,9 +226,9 @@ export default function Dashboard() {
 
       {/* Header */}
       {!isOnline && current && (
-        <div className="mt-3 flex items-center gap-2 px-4 py-2 
+        <div className="mt-3 flex items-center gap-2 px-3 py-2 
                         bg-destructive/10 border border-destructive/30 
-                        rounded-lg w-fit">
+                        rounded-lg w-full sm:w-fit">
           <span className="w-2 h-2 rounded-full bg-destructive" />
           <p className="text-sm text-destructive font-medium">
             Perangkat offline — menampilkan data terakhir
@@ -236,14 +236,14 @@ export default function Dashboard() {
         </div>
       )}
       <div>
-        <h1 className="font-display text-2xl font-bold">Dashboard</h1>
+        <h1 className="font-display text-xl sm:text-2xl font-bold">Dashboard</h1>
         <p className="text-muted-foreground">
           Monitoring kualitas air kolam lele secara real-time
         </p>
       </div>
 
       {/* Sensor Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
         {sensors.map((sensor) => (
           <SensorCard key={sensor.title} {...sensor} />
         ))}
@@ -253,10 +253,10 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Inlet */}
         <Card className="shadow-lg">
-          <CardContent className="p-6 flex justify-between items-center">
+          <CardContent className="p-4 sm:p-6 flex justify-between items-center">
             <div className="flex gap-4 items-center">
               <ArrowUpCircle className={cn(
-                "w-10 h-10",
+                "w-8 h-8 sm:w-10 sm:h-10",
                 displayFilling ? "text-success" : "text-muted-foreground"
               )} />
               <div>
@@ -276,7 +276,7 @@ export default function Dashboard() {
           <CardContent className="p-6 flex justify-between items-center">
             <div className="flex gap-4 items-center">
               <ArrowDownCircle className={cn(
-                "w-10 h-10",
+                "w-8 h-8 sm:w-10 sm:h-10",
                 displayDraining ? "text-warning" : "text-muted-foreground"
               )} />
               <div>
@@ -295,7 +295,7 @@ export default function Dashboard() {
       {/* Charts */}
       <div>
         <h2 className="font-display text-xl font-semibold mb-4">Grafik Hari Ini</h2>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-6">
           <SensorChart title="pH" data={todayData} dataKey="ph" unit="pH" color="#3b82f6" />
           <SensorChart title="Suhu" data={todayData} dataKey="suhu" unit="°C" color="#ef4444" />
           <SensorChart title="Kekeruhan" data={todayData} dataKey="ntu" unit="NTU" color="#10b981" />

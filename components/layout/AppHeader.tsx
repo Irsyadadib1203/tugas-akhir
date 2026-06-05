@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, LogOut, User } from 'lucide-react';
+import { Bell, LogOut, User, Droplets } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -103,13 +103,24 @@ export const AppHeader = () => {
   };
 
   return (
-    <header className="sticky top-0 z-30 h-16 bg-card border-b border-border px-6 flex items-center justify-between">
+    <header className="sticky top-0 z-30 h-16 bg-card border-b border-border px-3 sm:px-6 flex items-center justify-between">
       {/* Page Title */}
-      <div>
-        <h2 className="font-display font-semibold text-lg text-foreground">
+      <div className="flex items-center gap-3">
+      
+      {/* Logo — hanya tampil di mobile */}
+      <div className="flex md:hidden items-center gap-2">
+        <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center flex-shrink-0">
+          <Droplets className="w-4 h-4 text-primary-foreground" />
+        </div>
+        <span className="font-display font-bold text-sm text-foreground">AquaMonitor</span>
+      </div>
+
+      {/* Judul — hanya tampil di desktop */}
+      <div className="hidden md:block">
+        <h2 className="font-display font-semibold text-sm sm:text-lg text-foreground">
           Monitoring kualitas air kolam lele
         </h2>
-        <p className="text-sm text-muted-foreground">
+        <p className="hidden sm:block text-sm text-muted-foreground">
           {new Date().toLocaleDateString('id-ID', { 
             weekday: 'long', 
             year: 'numeric', 
@@ -118,6 +129,8 @@ export const AppHeader = () => {
           })}
         </p>
       </div>
+
+    </div>
           
       {/* Actions */}
       <div className="flex items-center gap-3">
@@ -133,7 +146,7 @@ export const AppHeader = () => {
               )}
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-80">
+          <DropdownMenuContent align="end" className="w-[calc(100vw-2rem)] sm:w-80">
             <div className="p-3 border-b border-border">
               <h3 className="font-semibold">Notifikasi</h3>
               <button
@@ -170,11 +183,13 @@ export const AppHeader = () => {
         {/* User Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="gap-2">
+            <Button variant="ghost" className="gap-2 px-2 sm:px-4">
               <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                 <User className="w-4 h-4 text-primary" />
               </div>
-              <span className="font-medium">{user?.displayName || user?.email?.split('@')[0] || 'User'}</span>
+              <span className="hidden sm:inline font-medium">
+                {user?.displayName || user?.email?.split('@')[0] || 'User'}
+              </span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">

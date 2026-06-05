@@ -183,25 +183,25 @@ export default function Auth() {
       </div>
 
       {/* Right Panel - Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-background">
+     <div className="w-full lg:w-1/2 flex items-center justify-center p-5 sm:p-8 bg-background">
         <div className="w-full max-w-md">
-          <div className="lg:hidden flex items-center gap-3 mb-8">
+          <div className="lg:hidden flex items-center gap-3 mb-6 sm:mb-8">
             <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
               <Droplets className="w-5 h-5 text-primary-foreground" />
             </div>
             <h1 className="font-display text-xl font-bold">AquaMonitor</h1>
           </div>
 
-          <h2 className="font-display text-2xl font-bold text-foreground mb-2">
+          <h2 className="font-display text-xl sm:text-2xl font-bold text-foreground mb-2">
             {isLogin ? 'Selamat Datang Kembali' : 'Buat Akun Baru'}
           </h2>
-          <p className="text-muted-foreground mb-8">
+          <p className="text-muted-foreground mb-5 sm:mb-8">
             {isLogin
               ? 'Masuk ke akun Anda untuk melanjutkan'
               : 'Daftar untuk mulai monitoring kualitas air'}
           </p>
 
-          <form onSubmit={handleSubmit} className="space-y-5"  noValidate>
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5"  noValidate>
 
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -282,7 +282,7 @@ export default function Auth() {
           />
 
           {/* Modal Card */}
-          <div className="relative z-10 w-full max-w-md bg-background rounded-2xl shadow-2xl p-8">
+          <div className="relative z-10 w-full max-w-md bg-background rounded-2xl shadow-2xl p-5 sm:p-8">
             {/* Close button */}
             <button
               type="button"

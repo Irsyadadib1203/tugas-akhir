@@ -36,23 +36,23 @@ export const SensorCard = ({
   maxValue,
 }: SensorCardProps) => {
   return (
-    <div className="bg-card rounded-2xl p-6 sensor-card-shadow border border-border/50 animate-fade-in hover:shadow-lg transition-shadow duration-300">
-      <div className="flex items-start justify-between mb-4">
-        <div className={cn('w-12 h-12 rounded-xl flex items-center justify-center', colorClass)}>
-          <Icon className="w-6 h-6 text-primary-foreground" />
+    <div className="bg-card rounded-2xl p-4 sm:p-6 sensor-card-shadow border border-border/50 animate-fade-in hover:shadow-lg transition-shadow duration-300">
+      <div className="flex items-start justify-between mb-3 sm:mb-4">
+        <div className={cn('w-9 h-9 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center', colorClass)}>
+          <Icon className="w-4 h-4 sm:w-6 sm:h-6 text-primary-foreground" />
         </div>
-        <span className={cn('px-3 py-1 rounded-full text-xs font-medium border', statusColors[status])}>
+        <span className={cn('px-2 sm:px-3 py-1 rounded-full text-xs font-medium border', statusColors[status])}>
           {statusLabels[status]}
         </span>
       </div>
 
-      <h3 className="text-sm font-medium text-muted-foreground mb-1">{title}</h3>
+      <h3 className="text-xs sm:text-sm font-medium text-muted-foreground mb-1">{title}</h3>
       
       <div className="flex items-baseline gap-1 mb-3">
-        <span className="text-3xl font-display font-bold text-foreground">
+        <span className="text-2xl sm:text-3xl font-display font-bold text-foreground">
           {value.toFixed(1)}
         </span>
-        <span className="text-sm text-muted-foreground">{unit}</span>
+        <span className="text-xs sm:text-sm text-muted-foreground">{unit}</span>
       </div>
 
       {minValue !== undefined && maxValue !== undefined && (

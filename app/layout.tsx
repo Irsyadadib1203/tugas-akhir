@@ -16,7 +16,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Water Monitor Lele",
-  description: "Dashboard monitoring & controlling kolam ikan lele berbasis IoT",
+  description:
+    "Dashboard monitoring & controlling kolam ikan lele berbasis IoT",
 };
 
 export default function RootLayout({

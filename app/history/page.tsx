@@ -83,9 +83,9 @@ export default function History() {
         <Table className="table-fixed">
           <TableHeader>
             <TableRow className="bg-muted/50">
-              <TableHead className="font-semibold w-1/4 text-center">No</TableHead>
-              <TableHead className="font-semibold w-1/4 text-center">Hari</TableHead>
-              <TableHead className="font-semibold w-1/4 text-center">Tanggal</TableHead>
+              <TableHead className="font-semibold w-1/12 text-center">No</TableHead>
+              <TableHead className="font-semibold hidden sm:table-cell text-center">Hari</TableHead>
+              <TableHead className="font-semibold text-center">Tanggal</TableHead>
               <TableHead className="font-semibold w-1/4 text-center">Aksi</TableHead>
             </TableRow>
           </TableHeader>
@@ -104,17 +104,13 @@ export default function History() {
               return (
                 <TableRow key={data.date} className="hover:bg-muted/30 transition-colors">
                   <TableCell className="font-medium text-center">{rowNumber}</TableCell>
-                  <TableCell className="text-center">{formattedDate.day}</TableCell>
+                  <TableCell className="text-center hidden sm:table-cell">{formattedDate.day}</TableCell>
                   <TableCell className="text-center">{formattedDate.date} {formattedDate.month} {formattedDate.year}</TableCell>
                   <TableCell className="text-center">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleViewDetail(data.date)}
-                      className="gap-2 hover:bg-primary hover:text-primary-foreground transition-colors"
-                    >
+                   <Button variant="outline" size="sm" onClick={() => handleViewDetail(data.date)}
+                      className="gap-2 hover:bg-primary hover:text-primary-foreground transition-colors">
                       <Eye className="w-4 h-4" />
-                      Detail
+                      <span className="hidden sm:inline">Detail</span>
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -125,43 +121,40 @@ export default function History() {
 
         {/* Pagination */}
         {historicalData.length > 0 && (
-        <div className="flex items-center justify-between px-6 py-4 border-t border-border">
-          <p className="text-sm text-muted-foreground">
-            Menampilkan {startIndex + 1} - {Math.min(endIndex, historicalData.length)} dari {historicalData.length} data
+        <div className="flex items-center justify-between px-3 sm:px-6 py-4 border-t border-border">
+          <p className="text-xs sm:text-sm text-muted-foreground">
+            <span className="hidden sm:inline">Menampilkan </span>
+            {startIndex + 1}-{Math.min(endIndex, historicalData.length)} dari {historicalData.length}
           </p>
-          
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
+          <div className="flex items-center gap-1 sm:gap-2">
+            <Button variant="outline" size="sm"
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-            >
+              disabled={currentPage === 1}>
               <ChevronLeft className="w-4 h-4" />
-              Prev
+              <span className="hidden sm:inline">Prev</span>
             </Button>
-            
-            <div className="flex items-center gap-1">
+
+            <div className="hidden sm:flex items-center gap-1">
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <Button
-                  key={page}
+                <Button key={page}
                   variant={currentPage === page ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setCurrentPage(page)}
-                  className={currentPage === page ? 'gradient-primary' : ''}
-                >
+                  className={currentPage === page ? 'gradient-primary' : ''}>
                   {page}
                 </Button>
               ))}
             </div>
-            
-            <Button
-              variant="outline"
-              size="sm"
+
+            {/* Ganti nomor halaman dengan teks di mobile */}
+            <span className="sm:hidden text-xs text-muted-foreground px-2">
+              {currentPage} / {totalPages}
+            </span>
+
+            <Button variant="outline" size="sm"
               onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-            >
-              Next
+              disabled={currentPage === totalPages}>
+              <span className="hidden sm:inline">Next</span>
               <ChevronRight className="w-4 h-4" />
             </Button>
           </div>
